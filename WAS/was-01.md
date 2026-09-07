@@ -158,3 +158,21 @@ Configured under **Servers → Application Servers → [server] → Session Mana
 ```
 
 Files are named like `server1_<timestamp>_<sequence>.txt` — these are the first place to check during RCA for intermittent errors that don't show full detail in `SystemOut.log`/`SystemErr.log`.
+
+## 16. PING intergration with Webshere.
+PingID doesn't integrate with WAS directly. PingID is Ping Identity's MFA service (the mobile push/OTP piece), and it sits behind PingFederate, which acts as the SAML Identity Provider (IdP). WebSphere is configured as the SAML Service Provider (SP) and delegates authentication to PingFederate, which in turn invokes PingID as the second factor. PingFederate and IBM WebSphere Application Server can be configured to enable single sign-on using a standard SAML configuration for browser-based SSO.
+Ping Identity
+
+So the integration is really WAS (SP) ⟷ PingFederate (IdP) ⟷ PingID (MFA adapter).
+
+```
+User Browser → WAS (SP, protected resource)
+             → Redirect to PingFederate (IdP) for SAML auth
+             → PingFederate validates 1st factor (LDAP/AD)
+             → PingFederate invokes PingID Adapter for 2nd factor (push/OTP)
+             → User approves on PingID mobile app
+             → PingFederate issues SAML assertion back to WAS
+             → WAS validates assertion via Trust Association Interceptor (TAI)
+             → User granted access, WAS session established
+```
+
